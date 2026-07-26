@@ -1,5 +1,3 @@
-# linux-command-cheat-sheet
-A modern, interactive Linux command cheatsheet featuring a terminal-inspired interface, categorized commands, instant search, and one-click copy functionality.
 # 🐧 Linux Command Cheatsheet
 
 An interactive Linux Command Cheatsheet that provides quick access to commonly used Linux commands through a clean, terminal-inspired interface.
